@@ -14,7 +14,7 @@ class MemberServerImpl @Inject()(memberEndpoint: _MemberEndpointDisp) extends Me
 
   var status: Int = 0
   // Communicator实例，是ice run time的主句柄
-  var ic: Ice.Communicator = null
+  var ic: Ice.Communicator = _
 
   override def initServer: Unit = {
     try {
