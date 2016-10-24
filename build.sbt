@@ -6,18 +6,12 @@ scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "com.typesafe.akka" %% "akka-actor" % "2.4.11",
-  "com.typesafe.akka" %% "akka-http-spray-json-experimental" % "2.4.11",
-  "com.typesafe.akka" %% "akka-stream" % "2.4.11",
-  "com.typesafe.akka" %% "akka-http-core" % "2.4.11",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.1.1",
-  "ch.qos.logback" % "logback-classic" % "1.1.3",
+  "ch.qos.logback" % "logback-classic" % "1.1.7",
   "com.typesafe.slick" %% "slick" % "3.1.1",
 //  "org.slf4j" % "slf4j-nop" % "1.6.4",
   "org.scalatest" %% "scalatest" % "2.2.5" % "test",
-  "com.h2database" % "h2" % "1.4.187",
-  "net.codingwell" %% "scala-guice" % "4.0.1",
-  "com.typesafe.akka" %% "akka-http-testkit-experimental" % "2.0.3" % "test"
+  "net.codingwell" %% "scala-guice" % "4.0.1"
 )
 
 libraryDependencies += "com.zeroc" % "ice" % "3.6.2"
