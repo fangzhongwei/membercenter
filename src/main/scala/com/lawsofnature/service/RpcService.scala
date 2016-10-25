@@ -7,7 +7,7 @@ import com.lawsofnature.rpc.{MemberEndpointImpl, MemberServer, MemberServerImpl}
 import org.slf4j.LoggerFactory
 
 
-object HttpService extends App {
+object RpcService extends App {
   var logger = LoggerFactory.getLogger(this.getClass)
 
   private val injector = Guice.createInjector(new AbstractModule() {
