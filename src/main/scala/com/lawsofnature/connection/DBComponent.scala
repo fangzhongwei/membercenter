@@ -5,9 +5,9 @@ import slick.driver.JdbcProfile
 
 trait DBComponent {
 
-  val driver: JdbcProfile
+  val profile: JdbcProfile
 
-  import driver.api._
+  import profile.api._
 
   val db: Database
 }

@@ -6,19 +6,15 @@ import slick.driver.MySQLDriver
   * Created by satendra on 16/3/16.
   */
 trait MySQLDBImpl extends DBComponent {
+  val profile = MySQLDriver
 
-val driver = MySQLDriver
+  import profile.api._
 
-import driver.api._
-
-val db: Database = MySqlDB.connectionPool
-
+  val db: Database = MySqlDB.connectionPool
 }
 
 private[connection] object MySqlDB {
-
   import slick.driver.MySQLDriver.api._
 
   val connectionPool = Database.forConfig("mysql")
-
 }

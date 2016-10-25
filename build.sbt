@@ -17,6 +17,6 @@ libraryDependencies ++= Seq(
 libraryDependencies += "com.zeroc" % "ice" % "3.6.2"
 libraryDependencies += "com.lawsofnature.member" % "memberclient_2.11" % "1.0-SNAPSHOT"
 // https://mvnrepository.com/artifact/com.typesafe.slick/slick-codegen_2.11
-libraryDependencies += "com.typesafe.slick" % "slick-codegen_2.11" % "3.1.1"
+libraryDependencies += "com.typesafe.slick" % "slick-codegen_2.11" % "3.1.1" % "test"
 // https://mvnrepository.com/artifact/com.typesafe/config
 libraryDependencies += "com.typesafe" % "config" % "1.3.1"
