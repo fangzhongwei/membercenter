@@ -1,7 +1,7 @@
 package com.lawsofnature.connection
 
 
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 trait DBComponent {
 
