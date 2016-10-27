@@ -21,3 +21,6 @@ libraryDependencies += "com.typesafe.slick" % "slick-codegen_2.11" % "3.2.0-M1" 
 // https://mvnrepository.com/artifact/com.typesafe/config
 libraryDependencies += "com.typesafe" % "config" % "1.3.1"
 libraryDependencies += "com.lawsofnature.common" % "common-ice_2.11" % "1.0"
+
+// https://mvnrepository.com/artifact/org.mybatis.scala/mybatis-scala-core_2.11
+libraryDependencies += "org.mybatis.scala" % "mybatis-scala-core_2.11" % "1.0.3"

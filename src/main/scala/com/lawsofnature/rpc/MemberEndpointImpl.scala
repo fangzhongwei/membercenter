@@ -5,12 +5,12 @@ import javax.inject.Inject
 
 import Ice.Current
 import RpcMember.{MemberCarrier, RegisterResponse, _MemberEndpointDisp}
-import com.lawsofnature.repo.{MemberRepository, TmMemberRow}
+import com.lawsofnature.repo.{MemberRepository, TmMemberIdentityRow, TmMemberRow}
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
-import scala.util.{Failure, Success}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 /**
   * Created by fangzhongwei on 2016/10/11.
@@ -19,27 +19,25 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _
 
   var logger = LoggerFactory.getLogger(this.getClass)
 
+  implicit val timeout = (30 seconds)
+
   override def register(memberCarrier: MemberCarrier, current: Current): RegisterResponse = {
-//        val result: Int = Await.ready(memberRepository.createMember(TmMemberRow(None, memberCarrier.username, 1, memberCarrier.pwd, new Timestamp(System.currentTimeMillis()), None)))
-//        logger.info(new StringBuilder("insert result:").append(result).toString())
-//        if (result > 0) {
-//          new RegisterResponse(true, "0", "注册成功")
-//        } else {
-//          new RegisterResponse(false, "1", "注册失败")
-//        }
-
-
-    //    case class TmMemberRow(memberId: Long, username: String, status: Byte, password: String, gmtCreate: java.sql.Timestamp, gmtUpdate: Option[java.sql.Timestamp] = None)
-//
-    println("get one!")
-    Thread.sleep(5000)
-    println("handle one!")
-    memberRepository.createMember(TmMemberRow(0, memberCarrier.username, 1, memberCarrier.pwd, new Timestamp(System.currentTimeMillis()), None)) onComplete {
-      case Success(id) => null
-      case Failure(ex) => null
+    try {
+      val ids: Seq[Long] = Await.result(memberRepository.getNextMemberId(), timeout)
+      val memberId: Long = ids(0)
+      val identity = if (memberCarrier.pid == 1) memberCarrier.mobile else memberCarrier.email
+      val tmMemberRow: TmMemberRow = TmMemberRow(memberId, memberCarrier.username, 1, memberCarrier.pwd, new Timestamp(System.currentTimeMillis()))
+      val memberIdentityRow: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, identity, memberCarrier.pid.toByte, new Timestamp(System.currentTimeMillis()))
+      Await.result(memberRepository.createMember(tmMemberRow, memberIdentityRow), timeout)
+      new RegisterResponse(true, "0", "注册成功")
+    } catch {
+      case ex: MySQLIntegrityConstraintViolationException =>
+        logger.error("register", ex)
+        new RegisterResponse(false, "1", "用户名已存在")
+      case ex: Exception =>
+        logger.error("register", ex)
+        new RegisterResponse(false, "1", "注册失败")
     }
-
-    null
   }
 
   override def getMemberByMemberId(memberId: Long, current: Current): MemberCarrier = {
