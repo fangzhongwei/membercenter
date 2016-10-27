@@ -8,6 +8,7 @@ import com.google.inject.{AbstractModule, Guice}
 import com.lawsofnatrue.common.ice.{ConfigHelper, IceServerTemplate, IceServerTemplateImpl}
 import com.lawsofnature.repo._
 import com.lawsofnature.rpc.MemberEndpointImpl
+import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
 

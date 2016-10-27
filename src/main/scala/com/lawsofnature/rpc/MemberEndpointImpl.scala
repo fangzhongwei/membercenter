@@ -31,6 +31,9 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _
 
     //    case class TmMemberRow(memberId: Long, username: String, status: Byte, password: String, gmtCreate: java.sql.Timestamp, gmtUpdate: Option[java.sql.Timestamp] = None)
 //
+    println("get one!")
+    Thread.sleep(5000)
+    println("handle one!")
     memberRepository.createMember(TmMemberRow(0, memberCarrier.username, 1, memberCarrier.pwd, new Timestamp(System.currentTimeMillis()), None)) onComplete {
       case Success(id) => null
       case Failure(ex) => null
