@@ -1,12 +1,12 @@
 package com.lawsofnature.connection
 
-import slick.driver.MySQLDriver
+import slick.jdbc.MySQLProfile
 
 /**
   * Created by satendra on 16/3/16.
   */
 trait MySQLDBImpl extends DBComponent {
-  val profile = MySQLDriver
+  val profile = MySQLProfile
 
   import profile.api._
 
@@ -14,7 +14,7 @@ trait MySQLDBImpl extends DBComponent {
 }
 
 private[connection] object MySqlDB {
-  import slick.driver.MySQLDriver.api._
+  import MySQLProfile.api._
 
   val connectionPool = Database.forConfig("mysql")
 }
