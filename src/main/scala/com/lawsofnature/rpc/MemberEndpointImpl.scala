@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Success
 
 /**
   * Created by fangzhongwei on 2016/10/11.
@@ -26,6 +27,7 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _
       val ids: Seq[Long] = Await.result(memberRepository.getNextMemberId(), timeout)
       val memberId: Long = ids(0)
       val identity = if (memberCarrier.pid == 1) memberCarrier.mobile else memberCarrier.email
+
       val tmMemberRow: TmMemberRow = TmMemberRow(memberId, memberCarrier.username, 1, memberCarrier.pwd, new Timestamp(System.currentTimeMillis()))
       val memberIdentityRow: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, identity, memberCarrier.pid.toByte, new Timestamp(System.currentTimeMillis()))
       Await.result(memberRepository.createMember(tmMemberRow, memberIdentityRow), timeout)
@@ -55,6 +57,7 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _
     //      case Some(member) => new MemberCarrier(member.id.get, member.deviceType, member.fingerPrint, member.username, member.pid, member.mobile, member.email, "")
     //      case None => null
     //    }
+
     null
   }
 
@@ -72,7 +75,7 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _
     //    result match {
     //      case Some(member) => new MemberCarrier(member.id.get, member.deviceType, member.fingerPrint, member.username, member.pid, member.mobile, member.email, "")
     //      case None => null
-    //    }
+    //    }`
     null
   }
 
