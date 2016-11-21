@@ -11,6 +11,7 @@ import com.lawsofnature.membercenter.helper.IPv4Util
 import com.lawsofnature.repo.{MemberRepository, TmMemberIdentityRow, TmMemberRegRow, TmMemberRow}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
+import org.springframework.security.crypto.password.StandardPasswordEncoder
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
@@ -20,6 +21,8 @@ import scala.concurrent.{Await, Future, Promise}
   */
 class MemberEndpointImpl @Inject()(memberRepository: MemberRepository, rabbitmqProducerTemplate: RabbitmqProducerTemplate) extends _MemberEndpointDisp {
   var logger = LoggerFactory.getLogger(this.getClass)
+
+  private val passwordEncoder: StandardPasswordEncoder = new StandardPasswordEncoder(ConfigFactory.load().getString("password.salt"))
 
   implicit val timeout = (90 seconds)
 
@@ -35,7 +38,7 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository, rabbitmqP
 
       val identity = request.identity
       val gmtCreate: Timestamp = new Timestamp(System.currentTimeMillis())
-      val tmMemberRow: TmMemberRow = TmMemberRow(memberId, request.username, 1, request.pwd, gmtCreate)
+      val tmMemberRow: TmMemberRow = TmMemberRow(memberId, request.username, 1, encodePassword(request.pwd), gmtCreate)
       val memberIdentityRowUsername: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, request.username, 0.toByte, gmtCreate)
       val memberIdentityRow: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, identity, request.pid.toByte, gmtCreate)
       val tmMemberRegRow: TmMemberRegRow = TmMemberRegRow(memberId, IPv4Util.ipToLong(request.ip), request.lat, request.lng, request.deviceType.toByte, request.deviceIdentity, gmtCreate)
@@ -52,6 +55,10 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository, rabbitmqP
         logger.error(traceId, ex)
         new BaseResponse(false, ServiceErrorCode.EC_SYSTEM_ERROR.id)
     }
+  }
+
+  def encodePassword(pwd:String):String = {
+    passwordEncoder.encode(pwd)
   }
 
   def produceCreateAccountMessage(memberId: Long): Future[Unit] = {
