@@ -16,6 +16,8 @@ import org.springframework.security.crypto.password.StandardPasswordEncoder
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 /**
   * Created by fangzhongwei on 2016/10/11.
   */
