@@ -4,87 +4,69 @@ import java.sql.Timestamp
 import javax.inject.Inject
 
 import Ice.Current
-import RpcMember.{MemberCarrier, RegisterResponse, _MemberEndpointDisp}
-import com.lawsofnature.repo.{MemberRepository, TmMemberIdentityRow, TmMemberRow}
+import RpcMember.{BaseResponse, MemberRegisterRequest, MemberResponse, _MemberEndpointDisp}
+import com.lawsofnature.common.exception.{ServiceErrorCode, ServiceException}
+import com.lawsofnature.membercenter.helper.IPv4Util
+import com.lawsofnature.repo.{MemberRepository, TmMemberIdentityRow, TmMemberRegRow, TmMemberRow}
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Success
 
 /**
   * Created by fangzhongwei on 2016/10/11.
   */
 class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _MemberEndpointDisp {
-
   var logger = LoggerFactory.getLogger(this.getClass)
 
-  implicit val timeout = (30 seconds)
+  implicit val timeout = (90 seconds)
 
-  override def register(memberCarrier: MemberCarrier, current: Current): RegisterResponse = {
+  override def getMemberByIdentity(traceId: String, identity: String, pid: Int, current: Current): MemberResponse = null
+
+  override def register(traceId: String, request: MemberRegisterRequest, current: Current): BaseResponse = {
     try {
-      val ids: Seq[Long] = Await.result(memberRepository.getNextMemberId(), timeout)
-      val memberId: Long = ids(0)
-      val identity = if (memberCarrier.pid == 1) memberCarrier.mobile else memberCarrier.email
+      assert(traceId != null, "trace id is null !")
+      logger.info("traceId:{}, request:{}, current:{}", traceId, request, current)
 
-      val tmMemberRow: TmMemberRow = TmMemberRow(memberId, memberCarrier.username, 1, memberCarrier.pwd, new Timestamp(System.currentTimeMillis()))
-      val memberIdentityRow: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, identity, memberCarrier.pid.toByte, new Timestamp(System.currentTimeMillis()))
-      Await.result(memberRepository.createMember(tmMemberRow, memberIdentityRow), timeout)
-      new RegisterResponse(true, "0", "注册成功")
+      checkIdentity(traceId, request, current)
+      val memberId: Long = generateMemberId
+
+      val identity = request.identity
+      val gmtCreate: Timestamp = new Timestamp(System.currentTimeMillis())
+      val tmMemberRow: TmMemberRow = TmMemberRow(memberId, request.username, 1, request.pwd, gmtCreate)
+      val memberIdentityRowUsername: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, request.username, 0.toByte, gmtCreate)
+      val memberIdentityRow: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, identity, request.pid.toByte, gmtCreate)
+      val tmMemberRegRow: TmMemberRegRow = TmMemberRegRow(memberId, IPv4Util.ipToLong(request.ip), request.lat, request.lng, request.deviceType.toByte, request.deviceIdentity, gmtCreate)
+      Await.result(memberRepository.createMember(tmMemberRow, memberIdentityRowUsername, memberIdentityRow, tmMemberRegRow), timeout)
+      new BaseResponse(true, 0)
     } catch {
-      case ex: MySQLIntegrityConstraintViolationException =>
-        logger.error("register", ex)
-        new RegisterResponse(false, "1", "用户名已存在")
+      case ex: ServiceException =>
+        logger.error(traceId, ex)
+        new BaseResponse(false, ex.serviceErrorCode.id)
       case ex: Exception =>
-        logger.error("register", ex)
-        new RegisterResponse(false, "1", "注册失败")
+        logger.error(traceId, ex)
+        new BaseResponse(false, ServiceErrorCode.EC_SYSTEM_ERROR.id)
     }
   }
 
-  override def getMemberByMemberId(memberId: Long, current: Current): MemberCarrier = {
-    //    val result: Option[Member] = Await.result(memberRepository.getMemberById(memberId.toInt), 30 seconds)
-    //    result match {
-    //      case Some(member) => new MemberCarrier(member.id.get, member.deviceType, member.fingerPrint, member.username, member.pid, member.mobile, member.email, "")
-    //      case None => null
-    //    }
-    null
+  def generateMemberId: Long = {
+    val ids: Seq[Long] = Await.result(memberRepository.getNextMemberId(), timeout)
+    val memberId: Long = ids(0)
+    memberId
   }
 
-  override def getMemberByUsername(username: String, current: Current): MemberCarrier = {
-    //    val result: Option[Member] = Await.result(memberRepository.getMemberByUsername(username), 30 seconds)
-    //    result match {
-    //      case Some(member) => new MemberCarrier(member.id.get, member.deviceType, member.fingerPrint, member.username, member.pid, member.mobile, member.email, "")
-    //      case None => null
-    //    }
-
-    null
+  def checkIdentity(traceId: String, request: MemberRegisterRequest, current: Current): Unit = {
+    val usernameMemberResponse: MemberResponse = getMemberByIdentity(traceId, request.username, 0, current)
+    if (usernameMemberResponse.success) throw new ServiceException(ServiceErrorCode.EC_UC_USERNAME_TOKEN)
+    val identityMemberResponse: MemberResponse = getMemberByIdentity(traceId, request.identity, request.pid, current)
+    if (identityMemberResponse.success) {
+      request.pid match {
+        case 1 => throw new ServiceException(ServiceErrorCode.EC_UC_MOBILE_TOKEN)
+        case 2 => throw new ServiceException(ServiceErrorCode.EC_UC_EMAIL_TOKEN)
+      }
+    }
   }
 
-  override def getMemberByEmail(email: String, current: Current): MemberCarrier = {
-    //    val result: Option[Member] = Await.result(memberRepository.getMemberByEmail(email), 30 seconds)
-    //    result match {
-    //      case Some(member) => new MemberCarrier(member.id.get, member.deviceType, member.fingerPrint, member.username, member.pid, member.mobile, member.email, "")
-    //      case None => null
-    //    }
-    null
-  }
-
-  override def getMemberByMobile(mobile: String, current: Current): MemberCarrier = {
-    //    val result: Option[Member] = Await.result(memberRepository.getMemberByMobile(mobile), 30 seconds)
-    //    result match {
-    //      case Some(member) => new MemberCarrier(member.id.get, member.deviceType, member.fingerPrint, member.username, member.pid, member.mobile, member.email, "")
-    //      case None => null
-    //    }`
-    null
-  }
-
-  override def getMemberById(id: Int, current: Current): MemberCarrier = {
-    //    val result: Option[Member] = Await.result(memberRepository.getMemberById(id), 30 seconds)
-    //    result match {
-    //      case Some(member) => new MemberCarrier(member.id.get, member.deviceType, member.fingerPrint, member.username, member.pid, member.mobile, member.email, "")
-    //      case None => null
-    //    }
-    null
-  }
+  override def getMemberByMemberId(traceId: String, memberId: Long, current: Current): MemberResponse = null
 }

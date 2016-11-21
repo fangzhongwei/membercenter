@@ -14,10 +14,12 @@ trait MemberRepository extends Tables {
   protected def TmMemberAutoInc = TmMember returning TmMember.map(_.memberId)
   protected def TmMemberIdentityAutoInc = TmMemberIdentity returning TmMemberIdentity.map(_.memberId)
 
-  def createMember(member: TmMemberRow, memberIdentityRow: TmMemberIdentityRow): Future[Unit] = {
+  def createMember(member: TmMemberRow, memberIdentityRowUsername: TmMemberIdentityRow, memberIdentityRow: TmMemberIdentityRow, memberReg: TmMemberRegRow): Future[Unit] = {
     val a = (for {
       _ <- TmMember += member
+      _ <- TmMemberIdentity += memberIdentityRowUsername
       _ <- TmMemberIdentity += memberIdentityRow
+      _ <- TmMemberReg += memberReg
     } yield ()).transactionally
     db.run(a)
   }
