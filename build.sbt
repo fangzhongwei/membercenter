@@ -18,3 +18,4 @@ libraryDependencies ++= Seq(
 // https://mvnrepository.com/artifact/org.reactivestreams/reactive-streams
 libraryDependencies += "org.reactivestreams" % "reactive-streams" % "1.0.0"
 libraryDependencies += "com.lawsofnature.common" % "common-error_2.11" % "1.0"
+libraryDependencies += "com.lawsofnature.common" % "common-rabbitmq_2.12.0-RC2" % "1.0"

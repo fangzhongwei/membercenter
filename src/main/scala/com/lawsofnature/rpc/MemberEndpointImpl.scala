@@ -6,18 +6,19 @@ import javax.inject.Inject
 import Ice.Current
 import RpcMember.{BaseResponse, MemberRegisterRequest, MemberResponse, _MemberEndpointDisp}
 import com.lawsofnature.common.exception.{ServiceErrorCode, ServiceException}
+import com.lawsofnature.common.rabbitmq.RabbitmqProducerTemplate
 import com.lawsofnature.membercenter.helper.IPv4Util
 import com.lawsofnature.repo.{MemberRepository, TmMemberIdentityRow, TmMemberRegRow, TmMemberRow}
-import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
+import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future, Promise}
 
 /**
   * Created by fangzhongwei on 2016/10/11.
   */
-class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _MemberEndpointDisp {
+class MemberEndpointImpl @Inject()(memberRepository: MemberRepository, rabbitmqProducerTemplate: RabbitmqProducerTemplate) extends _MemberEndpointDisp {
   var logger = LoggerFactory.getLogger(this.getClass)
 
   implicit val timeout = (90 seconds)
@@ -39,6 +40,9 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _
       val memberIdentityRow: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, identity, request.pid.toByte, gmtCreate)
       val tmMemberRegRow: TmMemberRegRow = TmMemberRegRow(memberId, IPv4Util.ipToLong(request.ip), request.lat, request.lng, request.deviceType.toByte, request.deviceIdentity, gmtCreate)
       Await.result(memberRepository.createMember(tmMemberRow, memberIdentityRowUsername, memberIdentityRow, tmMemberRegRow), timeout)
+
+      produceCreateAccountMessage(memberId)
+
       new BaseResponse(true, 0)
     } catch {
       case ex: ServiceException =>
@@ -48,6 +52,20 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository) extends _
         logger.error(traceId, ex)
         new BaseResponse(false, ServiceErrorCode.EC_SYSTEM_ERROR.id)
     }
+  }
+
+  def produceCreateAccountMessage(memberId: Long): Future[Unit] = {
+    val promise: Promise[Unit] = Promise[Unit]
+    Future {
+      val config: Config = ConfigFactory.load()
+      rabbitmqProducerTemplate.send(config.getString("account.mq.exchange"),
+        config.getString("account.mq.exchangeType"),
+        config.getString("account.mq.queue"),
+        config.getString("account.mq.routingKey"),
+        memberId.toString.getBytes("UTF-8"))
+      promise.success()
+    }
+    promise.future
   }
 
   def generateMemberId: Long = {
