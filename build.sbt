@@ -19,3 +19,6 @@ libraryDependencies ++= Seq(
 libraryDependencies += "org.reactivestreams" % "reactive-streams" % "1.0.0"
 libraryDependencies += "com.lawsofnature.common" % "common-error_2.11" % "1.0"
 libraryDependencies += "com.lawsofnature.common" % "common-rabbitmq_2.12.0-RC2" % "1.0"
+
+// https://mvnrepository.com/artifact/org.springframework.security/spring-security-crypto
+libraryDependencies += "org.springframework.security" % "spring-security-crypto" % "4.2.0.RELEASE"
