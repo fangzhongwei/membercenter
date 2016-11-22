@@ -2,22 +2,21 @@ package com.lawsofnature.repo
 
 import com.lawsofnature.connection.{DBComponent, MySQLDBImpl}
 
-import scala.concurrent.Future
-
+import scala.concurrent.{Awaitable, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait MemberRepository extends Tables {
   this: DBComponent =>
+
 
   import profile.api._
 
   protected def TmMemberAutoInc = TmMember returning TmMember.map(_.memberId)
   protected def TmMemberIdentityAutoInc = TmMemberIdentity returning TmMemberIdentity.map(_.memberId)
 
-  def createMember(member: TmMemberRow, memberIdentityRowUsername: TmMemberIdentityRow, memberIdentityRow: TmMemberIdentityRow, memberReg: TmMemberRegRow): Future[Unit] = {
+  def createMember(member: TmMemberRow, memberIdentityRow: TmMemberIdentityRow, memberReg: TmMemberRegRow): Future[Unit] = {
     val a = (for {
       _ <- TmMember += member
-      _ <- TmMemberIdentity += memberIdentityRowUsername
       _ <- TmMemberIdentity += memberIdentityRow
       _ <- TmMemberReg += memberReg
     } yield ()).transactionally
@@ -30,6 +29,14 @@ trait MemberRepository extends Tables {
 
   def getMemberByUsername(username: String): Future[Option[TmMemberRow]] = db.run {
     TmMember.filter(_.username === username).result.headOption
+  }
+
+  def getMemberIdentity(identity: String, pid:Int): Future[Option[TmMemberIdentityRow]] = db.run {
+    TmMemberIdentity.filter( r => r.identity === identity && r.pid == pid).result.headOption
+  }
+
+  def getMemberIdentityByMemberId(memberId: Long): Future[Option[TmMemberIdentityRow]] = db.run {
+    TmMemberIdentity.filter( _.memberId === memberId).result.headOption
   }
 
   def getNextMemberId():Future[Seq[(Long)]]={

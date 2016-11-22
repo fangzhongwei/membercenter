@@ -13,10 +13,9 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.password.StandardPasswordEncoder
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by fangzhongwei on 2016/10/11.
@@ -28,7 +27,29 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository, rabbitmqP
 
   implicit val timeout = (90 seconds)
 
-  override def getMemberByIdentity(traceId: String, identity: String, pid: Int, current: Current): MemberResponse = null
+  override def getMemberByIdentity(traceId: String, identity: String, pid: Int, current: Current): MemberResponse = {
+    val memberIdentity: Option[TmMemberIdentityRow] = Await.result(memberRepository.getMemberIdentity(identity, pid), timeout)
+    memberIdentity match {
+      case Some(mi) =>
+        val memberId: Long = mi.memberId
+        val tmMemberRow: Option[TmMemberRow] = Await.result(memberRepository.getMemberById(memberId), timeout)
+        tmMemberRow match {
+          case Some(m) =>
+            new MemberResponse(true, 0, mi.memberId, m.username, mi.pid, mi.identity)
+          case None =>
+            noMemberResponse
+        }
+      case None =>
+        noMemberResponse
+    }
+  }
+
+  def noMemberResponse: MemberResponse = {
+    val response: MemberResponse = new MemberResponse()
+    response.success = false
+    response.code = ServiceErrorCode.EC_UC_MEMBER_NOT_EXISTS.id
+    response
+  }
 
   override def register(traceId: String, request: MemberRegisterRequest, current: Current): BaseResponse = {
     try {
@@ -41,10 +62,9 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository, rabbitmqP
       val identity = request.identity
       val gmtCreate: Timestamp = new Timestamp(System.currentTimeMillis())
       val tmMemberRow: TmMemberRow = TmMemberRow(memberId, request.username, 1, encodePassword(request.pwd), gmtCreate)
-      val memberIdentityRowUsername: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, request.username, 0.toByte, gmtCreate)
       val memberIdentityRow: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, identity, request.pid.toByte, gmtCreate)
       val tmMemberRegRow: TmMemberRegRow = TmMemberRegRow(memberId, IPv4Util.ipToLong(request.ip), request.lat, request.lng, request.deviceType.toByte, request.deviceIdentity, gmtCreate)
-      Await.result(memberRepository.createMember(tmMemberRow, memberIdentityRowUsername, memberIdentityRow, tmMemberRegRow), timeout)
+      Await.result(memberRepository.createMember(tmMemberRow, memberIdentityRow, tmMemberRegRow), timeout)
 
       produceCreateAccountMessage(memberId)
 
@@ -59,7 +79,7 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository, rabbitmqP
     }
   }
 
-  def encodePassword(pwd:String):String = {
+  def encodePassword(pwd: String): String = {
     passwordEncoder.encode(pwd)
   }
 
@@ -95,5 +115,17 @@ class MemberEndpointImpl @Inject()(memberRepository: MemberRepository, rabbitmqP
     }
   }
 
-  override def getMemberByMemberId(traceId: String, memberId: Long, current: Current): MemberResponse = null
+  override def getMemberByMemberId(traceId: String, memberId: Long, current: Current): MemberResponse = {
+    val tmMemberRow: Option[TmMemberRow] = Await.result(memberRepository.getMemberById(memberId), timeout)
+    tmMemberRow match {
+      case Some(m) =>
+        val memberIdentity: Option[TmMemberIdentityRow] = Await.result(memberRepository.getMemberIdentityByMemberId(memberId), timeout)
+        memberIdentity match {
+          case Some(mi) => new MemberResponse(true, 0, mi.memberId, m.username, mi.pid, mi.identity)
+          case None => noMemberResponse
+        }
+      case None =>
+        noMemberResponse
+    }
+  }
 }
