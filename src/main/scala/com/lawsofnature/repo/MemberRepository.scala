@@ -40,6 +40,10 @@ trait MemberRepository extends Tables {
     TmMemberIdentity.filter( r => r.memberId).result
   }
 
+  def getPassword(memberId: Long): Future[Option[String]] = db.run {
+    sql"""select password from tm_member where member_id = $memberId""".as[String].headOption
+  }
+
   def getNextMemberId():Future[Seq[(Long)]]={
     val tab = System.currentTimeMillis() % 3
     val sequenceName = "member_id_" + tab

@@ -21,6 +21,8 @@ import scala.concurrent.{Await, Future, Promise}
   * Created by fangzhongwei on 2016/11/22.
   */
 trait MemberService {
+  def checkPassword(traceId: String, memberId: Long, password: String): BaseResponse
+
   def register(traceId: String, request: MemberRegisterRequest): BaseResponse
 
   def getMemberByIdentity(traceId: String, identity: String): MemberResponse
@@ -125,5 +127,15 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
     response.success = false
     response.code = ServiceErrorCode.EC_UC_MEMBER_NOT_EXISTS.id
     response
+  }
+
+  override def checkPassword(traceId: String, memberId: Long, password: String): BaseResponse = {
+    val dbPassword: Option[String] = Await.result(memberRepository.getPassword(memberId), timeout)
+    dbPassword match {
+      case Some(s) => passwordEncoder.matches(password, s) match {
+        case true => new BaseResponse(true, 0)
+        case false => new BaseResponse(false, ServiceErrorCode.EC_UC_MEMBER_INVALID_USERNAME_OR_PWD.id)
+      }
+    }
   }
 }
