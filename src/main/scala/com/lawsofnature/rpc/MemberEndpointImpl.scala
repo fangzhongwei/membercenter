@@ -18,9 +18,9 @@ class MemberEndpointImpl @Inject()(memberService: MemberService) extends _Member
     memberService.register(traceId, request)
   }
 
-  override def getMemberByIdentity(traceId: String, identity: String, pid: Int, current: Current): MemberResponse = {
-    logger.info("getMemberByIdentity request, traceId:{}, identity:{}, pid:{}, current:{}", traceId, identity, pid, current)
-    memberService.getMemberByIdentity(traceId, identity, pid)
+  override def getMemberByIdentity(traceId: String, identity: String, current: Current): MemberResponse = {
+    logger.info("getMemberByIdentity request, traceId:{}, identity:{}, current:{}", traceId, identity, current)
+    memberService.getMemberByIdentity(traceId, identity)
   }
 
   override def getMemberByMemberId(traceId: String, memberId: Long, current: Current): MemberResponse = {

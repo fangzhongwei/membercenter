@@ -32,8 +32,8 @@ trait MemberRepository extends Tables {
     TmMember.filter(_.username === username).result.headOption
   }
 
-  def getMemberIdentity(identity: String, pid:Int): Future[Option[TmMemberIdentityRow]] = db.run {
-    TmMemberIdentity.filter( r => r.identity === identity && r.pid == pid).result.headOption
+  def getMemberIdentity(identity: String): Future[Option[TmMemberIdentityRow]] = db.run {
+    TmMemberIdentity.filter( r => r.identity === identity).result.headOption
   }
 
   def getMemberIdentitiesByMemberId(memberId: Long): Future[Seq[TmMemberIdentityRow]] = db.run {

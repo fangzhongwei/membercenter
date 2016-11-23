@@ -21,11 +21,11 @@ import scala.concurrent.{Await, Future, Promise}
   * Created by fangzhongwei on 2016/11/22.
   */
 trait MemberService {
-  def getMemberByIdentity(s: String, s1: String, i: Int): MemberResponse
+  def register(traceId: String, request: MemberRegisterRequest): BaseResponse
 
-  def register(s: String, memberRegisterRequest: MemberRegisterRequest): BaseResponse
+  def getMemberByIdentity(traceId: String, identity: String): MemberResponse
 
-  def getMemberByMemberId(s: String, l: Long): MemberResponse
+  def getMemberByMemberId(traceId: String, memberId: Long): MemberResponse
 }
 
 class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqProducerTemplate: RabbitmqProducerTemplate) extends MemberService {
@@ -88,9 +88,9 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
   }
 
   def checkIdentity(traceId: String, request: MemberRegisterRequest): Unit = {
-    val usernameMemberResponse: MemberResponse = getMemberByIdentity(traceId, request.username, 0)
+    val usernameMemberResponse: MemberResponse = getMemberByIdentity(traceId, request.username)
     if (usernameMemberResponse.success) throw new ServiceException(ServiceErrorCode.EC_UC_USERNAME_TOKEN)
-    val identityMemberResponse: MemberResponse = getMemberByIdentity(traceId, request.identity, request.pid)
+    val identityMemberResponse: MemberResponse = getMemberByIdentity(traceId, request.identity)
     if (identityMemberResponse.success) {
       request.pid match {
         case 1 => throw new ServiceException(ServiceErrorCode.EC_UC_MOBILE_TOKEN)
@@ -99,8 +99,8 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
     }
   }
 
-  override def getMemberByIdentity(traceId: String, identity: String, pid: Int): MemberResponse = {
-    val memberIdentity: Option[TmMemberIdentityRow] = Await.result(memberRepository.getMemberIdentity(identity, pid), timeout)
+  override def getMemberByIdentity(traceId: String, identity: String): MemberResponse = {
+    val memberIdentity: Option[TmMemberIdentityRow] = Await.result(memberRepository.getMemberIdentity(identity), timeout)
     memberIdentity match {
       case Some(mi) =>
         getMemberByMemberId(traceId, mi.memberId)
