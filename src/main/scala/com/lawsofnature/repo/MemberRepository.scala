@@ -8,7 +8,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait MemberRepository extends Tables {
   this: DBComponent =>
 
-
   import profile.api._
 
   protected def TmMemberAutoInc = TmMember returning TmMember.map(_.memberId)
