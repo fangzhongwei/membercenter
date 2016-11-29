@@ -3,7 +3,7 @@ package com.lawsofnature.service
 import java.sql.Timestamp
 import javax.inject.Inject
 
-import RpcMember._
+import RpcMember.{MemberIdentityExistsResponse, _}
 import com.lawsofnature.common.exception.{ServiceErrorCode, ServiceException}
 import com.lawsofnature.common.rabbitmq.RabbitmqProducerTemplate
 import com.lawsofnature.membercenter.converter.MemberConverter
@@ -51,7 +51,8 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
       val tmMemberRow: TmMemberRow = TmMemberRow(memberId, request.username, 1, encodePassword(request.pwd), gmtCreate)
       val memberIdentityRowUsername: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, request.username, 0.toByte, gmtCreate)
       val memberIdentityRow: TmMemberIdentityRow = TmMemberIdentityRow(0, memberId, identity, request.pid.toByte, gmtCreate)
-      val tmMemberRegRow: TmMemberRegRow = TmMemberRegRow(memberId, IPv4Util.ipToLong(request.ip), request.lat, request.lng, request.deviceType.toByte, request.deviceIdentity, gmtCreate)
+      val tmMemberRegRow: TmMemberRegRow = TmMemberRegRow(memberId, request.deviceType.toByte, request.deviceIdentity, IPv4Util.ipToLong(request.ip), request.lat, request.lng,
+        Some(request.country), Some(request.province), Some(request.city), Some(request.county), Some(request.address), gmtCreate)
       Await.result(memberRepository.createMember(tmMemberRow, memberIdentityRowUsername, memberIdentityRow, tmMemberRegRow), timeout)
 
       produceCreateAccountMessage(memberId)
@@ -60,7 +61,7 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
     } catch {
       case ex: ServiceException =>
         logger.error(traceId, ex)
-        new BaseResponse(false, ex.serviceErrorCode.id)
+        new BaseResponse(false, ex.getErrorCode.id)
       case ex: Exception =>
         logger.error(traceId, ex)
         new BaseResponse(false, ServiceErrorCode.EC_SYSTEM_ERROR.id)
@@ -92,13 +93,12 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
   }
 
   def checkIdentity(traceId: String, request: MemberRegisterRequest): Unit = {
-    val usernameMemberResponse: MemberResponse = getMemberByIdentity(traceId, request.username)
-    if (usernameMemberResponse.success) throw new ServiceException(ServiceErrorCode.EC_UC_USERNAME_TOKEN)
-    val identityMemberResponse: MemberResponse = getMemberByIdentity(traceId, request.identity)
-    if (identityMemberResponse.success) {
+    if (isMemberIdentityExists(traceId, request.username).exists) throw ServiceException.make(ServiceErrorCode.EC_UC_USERNAME_TOKEN)
+    val memberIdentityExistsResponse: MemberIdentityExistsResponse = isMemberIdentityExists(traceId, request.identity)
+    if (memberIdentityExistsResponse.exists) {
       request.pid match {
-        case 1 => throw new ServiceException(ServiceErrorCode.EC_UC_MOBILE_TOKEN)
-        case 2 => throw new ServiceException(ServiceErrorCode.EC_UC_EMAIL_TOKEN)
+        case 1 => throw ServiceException.make(ServiceErrorCode.EC_UC_MOBILE_TOKEN)
+        case 2 => throw ServiceException.make(ServiceErrorCode.EC_UC_EMAIL_TOKEN)
       }
     }
   }
@@ -141,6 +141,7 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
         case true => new BaseResponse(true, 0)
         case false => new BaseResponse(false, ServiceErrorCode.EC_UC_MEMBER_INVALID_USERNAME_OR_PWD.id)
       }
+      case None => new BaseResponse(false, ServiceErrorCode.EC_SYSTEM_ERROR.id)
     }
   }
 
