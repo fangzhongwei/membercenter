@@ -20,6 +20,7 @@ object RpcService extends App {
       val map: util.HashMap[String, String] = ConfigHelper.configMap
       Names.bindProperties(binder(), map)
       bind(classOf[MemberRepository]).to(classOf[MemberRepositoryImpl]).asEagerSingleton()
+      bind(classOf[MemberService]).to(classOf[MemberServiceImpl]).asEagerSingleton()
       bind(classOf[ObjectImpl]).to(classOf[MemberEndpointImpl]).asEagerSingleton()
       bind(classOf[IceServerTemplate]).to(classOf[IceServerTemplateImpl]).asEagerSingleton()
       bind(classOf[RabbitmqProducerTemplate]).to(classOf[RabbitmqProducerTemplateImpl]).asEagerSingleton()

@@ -24,12 +24,12 @@ class MemberEndpointImpl @Inject()(memberService: MemberService) extends _Member
   }
 
   override def getMemberByMemberId(traceId: String, memberId: Long, current: Current): MemberResponse = {
-    logger.info("traceId:{}, memberId:{}, current:{}", traceId, memberId, current)
+    logger.info("traceId:{}, memberId:{}, current:{}", traceId, memberId.toString, current)
     memberService.getMemberByMemberId(traceId, memberId)
   }
 
   override def checkPassword(traceId: String, memberId: Long, password: String, current: Current): BaseResponse = {
-    logger.info("traceId:{}, memberId:{}, current:{}", traceId, memberId, current)
+    logger.info("traceId:{}, memberId:{}, current:{}", traceId, memberId.toString, current)
     memberService.checkPassword(traceId, memberId, password)
   }
 }

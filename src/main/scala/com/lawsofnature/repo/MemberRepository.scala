@@ -36,7 +36,7 @@ trait MemberRepository extends Tables {
   }
 
   def getMemberIdentitiesByMemberId(memberId: Long): Future[Seq[TmMemberIdentityRow]] = db.run {
-    TmMemberIdentity.filter( r => r.memberId).result
+    TmMemberIdentity.filter( r => r.memberId === memberId).result
   }
 
   def getPassword(memberId: Long): Future[Option[String]] = db.run {
