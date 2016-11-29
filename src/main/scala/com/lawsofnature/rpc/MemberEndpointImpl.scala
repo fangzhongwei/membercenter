@@ -32,4 +32,9 @@ class MemberEndpointImpl @Inject()(memberService: MemberService) extends _Member
     logger.info("traceId:{}, memberId:{}, current:{}", traceId, memberId.toString, current)
     memberService.checkPassword(traceId, memberId, password)
   }
+
+  override def isMemberIdentityExists(traceId: String, identity: String, current: Current): MemberIdentityExistsResponse = {
+    logger.info("isMemberIdentityExists request, traceId:{}, identity:{}, current:{}", traceId, identity, current)
+    memberService.isMemberIdentityExists(traceId, identity)
+  }
 }

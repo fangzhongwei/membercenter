@@ -21,6 +21,8 @@ import scala.concurrent.{Await, Future, Promise}
   * Created by fangzhongwei on 2016/11/22.
   */
 trait MemberService {
+  def isMemberIdentityExists(traceId: String, identity: String): MemberIdentityExistsResponse
+
   def checkPassword(traceId: String, memberId: Long, password: String): BaseResponse
 
   def register(traceId: String, request: MemberRegisterRequest): BaseResponse
@@ -102,10 +104,13 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
   }
 
   override def getMemberByIdentity(traceId: String, identity: String): MemberResponse = {
+    val millis: Long = System.currentTimeMillis()
     val memberIdentity: Option[TmMemberIdentityRow] = Await.result(memberRepository.getMemberIdentity(identity), timeout)
     memberIdentity match {
       case Some(mi) =>
-        getMemberByMemberId(traceId, mi.memberId)
+        val response: MemberResponse = getMemberByMemberId(traceId, mi.memberId)
+        logger.info("find member cost:" + (System.currentTimeMillis() - millis))
+        response
       case None =>
         noMemberResponse
     }
@@ -136,6 +141,18 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
         case true => new BaseResponse(true, 0)
         case false => new BaseResponse(false, ServiceErrorCode.EC_UC_MEMBER_INVALID_USERNAME_OR_PWD.id)
       }
+    }
+  }
+
+  override def isMemberIdentityExists(traceId: String, identity: String): MemberIdentityExistsResponse = {
+    val millis: Long = System.currentTimeMillis()
+    val memberIdentity: Option[TmMemberIdentityRow] = Await.result(memberRepository.getMemberIdentity(identity), timeout)
+    memberIdentity match {
+      case Some(mi) =>
+        logger.info("find member identity cost:" + (System.currentTimeMillis() - millis))
+        new MemberIdentityExistsResponse(true, 0, true)
+      case None =>
+        new MemberIdentityExistsResponse(true, 0, false)
     }
   }
 }
