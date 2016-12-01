@@ -4,7 +4,7 @@ import java.sql.Timestamp
 import javax.inject.Inject
 
 import RpcMember.{MemberIdentityExistsResponse, _}
-import com.lawsofnature.common.exception.{ServiceErrorCode, ServiceException}
+import com.lawsofnature.common.exception.{ErrorCode, ServiceException}
 import com.lawsofnature.common.rabbitmq.RabbitmqProducerTemplate
 import com.lawsofnature.membercenter.converter.MemberConverter
 import com.lawsofnature.membercenter.helper.IPv4Util
@@ -61,10 +61,10 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
     } catch {
       case ex: ServiceException =>
         logger.error(traceId, ex)
-        new BaseResponse(false, ex.getErrorCode.id)
+        new BaseResponse(false, ex.getErrorCode.getCode)
       case ex: Exception =>
         logger.error(traceId, ex)
-        new BaseResponse(false, ServiceErrorCode.EC_SYSTEM_ERROR.id)
+        new BaseResponse(false, ErrorCode.EC_SYSTEM_ERROR.getCode)
     }
   }
 
@@ -93,12 +93,12 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
   }
 
   def checkIdentity(traceId: String, request: MemberRegisterRequest): Unit = {
-    if (isMemberIdentityExists(traceId, request.username).exists) throw ServiceException.make(ServiceErrorCode.EC_UC_USERNAME_TOKEN)
+    if (isMemberIdentityExists(traceId, request.username).exists) throw ServiceException.make(ErrorCode.EC_UC_USERNAME_TOKEN)
     val memberIdentityExistsResponse: MemberIdentityExistsResponse = isMemberIdentityExists(traceId, request.identity)
     if (memberIdentityExistsResponse.exists) {
       request.pid match {
-        case 1 => throw ServiceException.make(ServiceErrorCode.EC_UC_MOBILE_TOKEN)
-        case 2 => throw ServiceException.make(ServiceErrorCode.EC_UC_EMAIL_TOKEN)
+        case 1 => throw ServiceException.make(ErrorCode.EC_UC_MOBILE_TOKEN)
+        case 2 => throw ServiceException.make(ErrorCode.EC_UC_EMAIL_TOKEN)
       }
     }
   }
@@ -130,7 +130,7 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
   def noMemberResponse: MemberResponse = {
     val response: MemberResponse = new MemberResponse()
     response.success = false
-    response.code = ServiceErrorCode.EC_UC_MEMBER_NOT_EXISTS.id
+    response.code = ErrorCode.EC_UC_MEMBER_NOT_EXISTS.getCode
     response
   }
 
@@ -139,9 +139,9 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository, rabbitmqPr
     dbPassword match {
       case Some(s) => passwordEncoder.matches(password, s) match {
         case true => new BaseResponse(true, 0)
-        case false => new BaseResponse(false, ServiceErrorCode.EC_UC_MEMBER_INVALID_USERNAME_OR_PWD.id)
+        case false => new BaseResponse(false, ErrorCode.EC_UC_MEMBER_INVALID_USERNAME_OR_PWD.getCode)
       }
-      case None => new BaseResponse(false, ServiceErrorCode.EC_SYSTEM_ERROR.id)
+      case None => new BaseResponse(false, ErrorCode.EC_SYSTEM_ERROR.getCode)
     }
   }
 
