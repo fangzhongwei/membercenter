@@ -14,6 +14,7 @@ object MemberConverter {
     for (i <- 0 to array.length - 1) {
       tmMemberIdentityRow = tmMemberIdentityRows(i)
       memberIdentity = new MemberIdentity(tmMemberIdentityRow.id, tmMemberIdentityRow.memberId, tmMemberIdentityRow.identity, tmMemberIdentityRow.pid, tmMemberIdentityRow.gmtCreate.getTime)
+      array(i) = memberIdentity
     }
     array
   }
