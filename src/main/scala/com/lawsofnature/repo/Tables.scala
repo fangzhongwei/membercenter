@@ -15,9 +15,10 @@ case class TmMemberRow(memberId: Long, username: String, status: Byte, password:
   *  @param id Database column id SqlType(BIGINT), AutoInc, PrimaryKey
   *  @param memberId Database column member_id SqlType(BIGINT)
   *  @param identity Database column identity SqlType(VARCHAR), Length(64,true)
+  *  @param identityTicket Database column identity_ticket SqlType(VARCHAR), Length(16,true)
   *  @param pid Database column pid SqlType(TINYINT)
   *  @param gmtCreate Database column gmt_create SqlType(TIMESTAMP) */
-case class TmMemberIdentityRow(id: Long, memberId: Long, identity: String, pid: Byte, gmtCreate: java.sql.Timestamp)
+case class TmMemberIdentityRow(id: Long, memberId: Long, identity: String, identityTicket: String, pid: Byte, gmtCreate: java.sql.Timestamp)
 
 /** Entity class storing rows of table TmMemberReg
   *  @param memberId Database column member_id SqlType(BIGINT), PrimaryKey
@@ -79,13 +80,13 @@ trait Tables extends MySQLDBImpl{
   /** GetResult implicit for fetching TmMemberIdentityRow objects using plain SQL queries */
   implicit def GetResultTmMemberIdentityRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Byte], e3: GR[java.sql.Timestamp]): GR[TmMemberIdentityRow] = GR{
     prs => import prs._
-      TmMemberIdentityRow.tupled((<<[Long], <<[Long], <<[String], <<[Byte], <<[java.sql.Timestamp]))
+      TmMemberIdentityRow.tupled((<<[Long], <<[Long], <<[String], <<[String], <<[Byte], <<[java.sql.Timestamp]))
   }
   /** Table description of table tm_member_identity. Objects of this class serve as prototypes for rows in queries. */
   class TmMemberIdentity(_tableTag: Tag) extends profile.api.Table[TmMemberIdentityRow](_tableTag, "tm_member_identity") {
-    def * = (id, memberId, identity, pid, gmtCreate) <> (TmMemberIdentityRow.tupled, TmMemberIdentityRow.unapply)
+    def * = (id, memberId, identity, identityTicket, pid, gmtCreate) <> (TmMemberIdentityRow.tupled, TmMemberIdentityRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(memberId), Rep.Some(identity), Rep.Some(pid), Rep.Some(gmtCreate)).shaped.<>({r=>import r._; _1.map(_=> TmMemberIdentityRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(memberId), Rep.Some(identity), Rep.Some(identityTicket), Rep.Some(pid), Rep.Some(gmtCreate)).shaped.<>({r=>import r._; _1.map(_=> TmMemberIdentityRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(BIGINT), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
@@ -93,13 +94,15 @@ trait Tables extends MySQLDBImpl{
     val memberId: Rep[Long] = column[Long]("member_id")
     /** Database column identity SqlType(VARCHAR), Length(64,true) */
     val identity: Rep[String] = column[String]("identity", O.Length(64,varying=true))
+    /** Database column identity_ticket SqlType(VARCHAR), Length(16,true) */
+    val identityTicket: Rep[String] = column[String]("identity_ticket", O.Length(16,varying=true))
     /** Database column pid SqlType(TINYINT) */
     val pid: Rep[Byte] = column[Byte]("pid")
     /** Database column gmt_create SqlType(TIMESTAMP) */
     val gmtCreate: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("gmt_create")
 
-    /** Uniqueness Index over (identity) (database name uq_tmi_ip) */
-    val index1 = index("uq_tmi_ip", identity, unique=true)
+    /** Uniqueness Index over (identityTicket) (database name uq_tmi_it) */
+    val index1 = index("uq_tmi_it", identityTicket, unique=true)
     /** Index over (memberId) (database name uq_tmi_m) */
     val index2 = index("uq_tmi_m", memberId)
   }

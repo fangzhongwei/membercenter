@@ -2,8 +2,8 @@ package com.lawsofnature.repo
 
 import com.lawsofnature.connection.{DBComponent, MySQLDBImpl}
 
-import scala.concurrent.{Awaitable, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait MemberRepository extends Tables {
   this: DBComponent =>
@@ -11,12 +11,12 @@ trait MemberRepository extends Tables {
   import profile.api._
 
   protected def TmMemberAutoInc = TmMember returning TmMember.map(_.memberId)
+
   protected def TmMemberIdentityAutoInc = TmMemberIdentity returning TmMemberIdentity.map(_.memberId)
 
-  def createMember(member: TmMemberRow, memberIdentityRowUsername: TmMemberIdentityRow, memberIdentityRow: TmMemberIdentityRow, memberReg: TmMemberRegRow): Future[Unit] = {
+  def createMember(member: TmMemberRow, memberIdentityRow: TmMemberIdentityRow, memberReg: TmMemberRegRow): Future[Unit] = {
     val a = (for {
       _ <- TmMember += member
-      _ <- TmMemberIdentity += memberIdentityRowUsername
       _ <- TmMemberIdentity += memberIdentityRow
       _ <- TmMemberReg += memberReg
     } yield ()).transactionally
@@ -31,21 +31,23 @@ trait MemberRepository extends Tables {
     TmMember.filter(_.username === username).result.headOption
   }
 
-  def getMemberIdentity(identity: String): Future[Option[TmMemberIdentityRow]] = db.run {
-    TmMemberIdentity.filter( r => r.identity === identity).result.headOption
+  def getMemberIdentityByTicket(ticket: String): Future[Option[TmMemberIdentityRow]] = db.run {
+    TmMemberIdentity.filter(r => r.identityTicket === ticket).result.headOption
   }
 
   def getMemberIdentitiesByMemberId(memberId: Long): Future[Seq[TmMemberIdentityRow]] = db.run {
-    TmMemberIdentity.filter( r => r.memberId === memberId).result
+    TmMemberIdentity.filter(r => r.memberId === memberId).result
   }
 
   def getPassword(memberId: Long): Future[Option[String]] = db.run {
     sql"""select password from tm_member where member_id = $memberId""".as[String].headOption
   }
 
-  def getNextMemberId():Future[Seq[(Long)]]={
-    val tab = System.currentTimeMillis() % 3
-    val sequenceName = "member_id_" + tab
+  var index = -1
+
+  def getNextMemberId(): Future[Seq[(Long)]] = {
+    index = index + 1
+    val sequenceName = "member_id_" + index % 3
     db.run(sql"""select nextval($sequenceName)""".as[(Long)])
   }
 }
