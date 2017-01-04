@@ -1,42 +1,44 @@
 package com.lawsofnature.repo
 
 import com.lawsofnature.connection.{DBComponent, MySQLDBImpl}
+import com.lawsofnature.membercenter.domain.Member
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 trait MemberRepository extends Tables {
   this: DBComponent =>
 
   import profile.api._
 
-  protected def TmMemberAutoInc = TmMember returning TmMember.map(_.memberId)
-
-  protected def TmMemberIdentityAutoInc = TmMemberIdentity returning TmMemberIdentity.map(_.memberId)
-
-  def createMember(member: TmMemberRow, memberIdentityRow: TmMemberIdentityRow, memberReg: TmMemberRegRow): Future[Unit] = {
-    val a = (for {
-      _ <- TmMember += member
-      _ <- TmMemberIdentity += memberIdentityRow
-      _ <- TmMemberReg += memberReg
-    } yield ()).transactionally
-    db.run(a)
+  implicit def memberToRaw(m: Member): TmMemberRow = {
+    TmMemberRow(m.memberId, m.mobile, m.mobileTicket, m.status, m.nickName, m.password, m.gmtCreate, m.gmtUpdate)
   }
 
-  def getMemberById(id: Long): Future[Option[TmMemberRow]] = db.run {
-    TmMember.filter(_.memberId === id).result.headOption
+  implicit def rawToMember(m: TmMemberRow): Member = {
+    Member(m.memberId, m.mobile, m.mobileTicket, m.status, m.nickName, m.password, m.gmtCreate, m.gmtUpdate)
   }
 
-  def getMemberByUsername(username: String): Future[Option[TmMemberRow]] = db.run {
-    TmMember.filter(_.username === username).result.headOption
+  def createMember(member: Member): Future[Int] = db.run {
+    TmMember += member
   }
 
-  def getMemberIdentityByTicket(ticket: String): Future[Option[TmMemberIdentityRow]] = db.run {
-    TmMemberIdentity.filter(r => r.identityTicket === ticket).result.headOption
+  def getMemberById(id: Long): Option[Member] = {
+    Await.result(db.run {
+      TmMember.filter(_.memberId === id).result.headOption
+    }, Duration.Inf) match {
+      case Some(row) => Some(row)
+      case None => None
+    }
   }
 
-  def getMemberIdentitiesByMemberId(memberId: Long): Future[Seq[TmMemberIdentityRow]] = db.run {
-    TmMemberIdentity.filter(r => r.memberId === memberId).result
+  def getMemberByMobileTicket(mobileTicket: String): Option[Member] = {
+    Await.result(db.run {
+      TmMember.filter(_.mobileTicket === mobileTicket).result.headOption
+    }, Duration.Inf) match {
+      case Some(row) => Some(row)
+      case None => None
+    }
   }
 
   def getPassword(memberId: Long): Future[Option[String]] = db.run {
@@ -45,10 +47,10 @@ trait MemberRepository extends Tables {
 
   var index = -1
 
-  def getNextMemberId(): Future[Seq[(Long)]] = {
+  def getNextMemberId(): Long = {
     index = index + 1
     val sequenceName = "member_id_" + index % 3
-    db.run(sql"""select nextval($sequenceName)""".as[(Long)])
+    Await.result(db.run(sql"""select nextval($sequenceName)""".as[(Long)]), Duration.Inf).head
   }
 }
 

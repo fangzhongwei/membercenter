@@ -3,7 +3,8 @@ package com.lawsofnature.rpc
 import javax.inject.Inject
 
 import Ice.Current
-import RpcMember._
+import RpcMember.{BaseResponse, _}
+import com.lawsofnature.common.exception.{ErrorCode, ServiceException}
 import com.lawsofnature.service.MemberService
 import org.slf4j.LoggerFactory
 
@@ -13,32 +14,35 @@ import org.slf4j.LoggerFactory
 class MemberEndpointImpl @Inject()(memberService: MemberService) extends _MemberEndpointDisp {
   var logger = LoggerFactory.getLogger(this.getClass)
 
-  override def register(traceId: String, request: MemberRegisterRequest, current: Current): BaseResponse = {
-    logger.info("register request, traceId:{}, request:{}, current:{}", traceId, request, current)
-    memberService.register(traceId, request)
+  override def register(traceId: String, mobileTicket: String, current: Current): BaseResponse = {
+    try {
+      memberService.register(traceId, mobileTicket)
+    } catch {
+      case ex: ServiceException =>
+        logger.error(traceId, ex)
+        new BaseResponse(ex.getErrorCode.getCode)
+      case ex: Exception =>
+        logger.error(traceId, ex)
+        new BaseResponse(ErrorCode.EC_SYSTEM_ERROR.getCode)
+    }
   }
 
-  override def getMemberByIdentity(traceId: String, identity: String, current: Current): MemberResponse = {
-    logger.info("getMemberByIdentity request, traceId:{}, identity:{}, current:{}", traceId, identity, current)
-    memberService.getMemberByIdentity(traceId, identity)
+  override def getMemberByMobile(traceId: String, mobileTicket: String, current: Current): MemberResponse = {
+    try {
+      memberService.getMemberByMobile(traceId, mobileTicket)
+    } catch {
+      case ex: ServiceException =>
+        logger.error(traceId, ex)
+        errorMemberResponse(ex.getErrorCode)
+      case ex: Exception =>
+        logger.error(traceId, ex)
+        errorMemberResponse(ErrorCode.EC_SYSTEM_ERROR)
+    }
   }
 
-  override def getMemberByMemberId(traceId: String, memberId: Long, current: Current): MemberResponse = {
-    logger.info("traceId:{}, memberId:{}, current:{}", traceId, memberId.toString, current)
-    memberService.getMemberByMemberId(traceId, memberId)
+  def errorMemberResponse(errorCode: ErrorCode): MemberResponse = {
+    val response: MemberResponse = new MemberResponse()
+    response.code = errorCode.getCode
+    response
   }
-
-  override def checkPassword(traceId: String, memberId: Long, password: String, current: Current): BaseResponse = {
-    logger.info("traceId:{}, memberId:{}, current:{}", traceId, memberId.toString, current)
-    memberService.checkPassword(traceId, memberId, password)
-  }
-
-  override def isMemberIdentityExists(traceId: String, identity: String, current: Current): ExistedResponse = {
-    logger.info("isMemberIdentityExists request, traceId:{}, identity:{}, current:{}", traceId, identity, current)
-    memberService.isMemberIdentityExists(traceId, identity)
-  }
-
-  override def isMemberUsernameExists(traceId: String, username: String, current: Current): ExistedResponse = memberService.isMemberUsernameExists(traceId, username)
-
-  override def getMemberByUsername(traceId: String, username: String, current: Current): MemberResponse = memberService.getMemberByUsername(traceId, username)
 }
