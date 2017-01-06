@@ -25,6 +25,8 @@ import scala.concurrent.{Future, Promise}
 trait MemberService {
   def register(traceId: String, mobileTicket: String): BaseResponse
 
+  def getMemberById(traceId: String, memberId: Long): MemberResponse
+
   def getMemberByMobile(traceId: String, mobileTicket: String): MemberResponse
 }
 
@@ -64,6 +66,14 @@ class MemberServiceImpl @Inject()(rabbitmqProducerTemplate: RabbitmqProducerTemp
     promise.future
   }
 
+  override def getMemberById(traceId: String, memberId: Long): MemberResponse = {
+    memberRepository.getMemberById(memberId) match {
+      case Some(m) =>
+        new MemberResponse("0", m.memberId, m.mobile, m.mobileTicket, m.status, m.nickName, m.password, m.gmtCreate.getTime, m.gmtUpdate.getTime)
+      case None => throw ServiceException.make(ErrorCode.EC_UC_MEMBER_NOT_EXISTS)
+    }
+  }
+
   override def getMemberByMobile(traceId: String, mobileTicket: String): MemberResponse = {
     memberRepository.getMemberByMobileTicket(mobileTicket) match {
       case Some(m) =>
@@ -71,4 +81,5 @@ class MemberServiceImpl @Inject()(rabbitmqProducerTemplate: RabbitmqProducerTemp
       case None => throw ServiceException.make(ErrorCode.EC_UC_MEMBER_NOT_EXISTS)
     }
   }
+
 }

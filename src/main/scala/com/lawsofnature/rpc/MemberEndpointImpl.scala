@@ -45,4 +45,17 @@ class MemberEndpointImpl @Inject()(memberService: MemberService) extends _Member
     response.code = errorCode.getCode
     response
   }
+
+  override def getMemberById(traceId: String, memberId: Long, current: Current): MemberResponse = {
+    try {
+      memberService.getMemberById(traceId, memberId)
+    } catch {
+      case ex: ServiceException =>
+        logger.error(traceId, ex)
+        errorMemberResponse(ex.getErrorCode)
+      case ex: Exception =>
+        logger.error(traceId, ex)
+        errorMemberResponse(ErrorCode.EC_SYSTEM_ERROR)
+    }
+  }
 }

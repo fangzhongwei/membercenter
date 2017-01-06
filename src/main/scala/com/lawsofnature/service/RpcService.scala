@@ -12,7 +12,6 @@ import com.lawsofnature.repo._
 import com.lawsofnature.rpc.MemberEndpointImpl
 import org.slf4j.LoggerFactory
 
-
 object RpcService extends App {
   var logger = LoggerFactory.getLogger(this.getClass)
 
