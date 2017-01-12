@@ -58,4 +58,30 @@ class MemberEndpointImpl @Inject()(memberService: MemberService) extends _Member
         errorMemberResponse(ErrorCode.EC_SYSTEM_ERROR)
     }
   }
+
+  override def updateNickName(traceId: String, memberId: Long, s1: String, current: Current): BaseResponse = {
+    try {
+      memberService.updateNickName(traceId, memberId)
+    } catch {
+      case ex: ServiceException =>
+        logger.error(traceId, ex)
+        errorMemberResponse(ex.getErrorCode)
+      case ex: Exception =>
+        logger.error(traceId, ex)
+        errorMemberResponse(ErrorCode.EC_SYSTEM_ERROR)
+    }
+  }
+
+  override def updateMemberStatus(traceId: String, memberId: Long, status: Int, current: Current): BaseResponse = {
+    try {
+      memberService.updateMemberStatus(traceId, memberId, status)
+    } catch {
+      case ex: ServiceException =>
+        logger.error(traceId, ex)
+        errorMemberResponse(ex.getErrorCode)
+      case ex: Exception =>
+        logger.error(traceId, ex)
+        errorMemberResponse(ErrorCode.EC_SYSTEM_ERROR)
+    }
+  }
 }

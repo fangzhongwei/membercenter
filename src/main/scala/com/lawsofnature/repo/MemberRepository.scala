@@ -52,6 +52,14 @@ trait MemberRepository extends Tables {
     val sequenceName = "member_id_" + index % 3
     Await.result(db.run(sql"""select nextval($sequenceName)""".as[(Long)]), Duration.Inf).head
   }
+
+  def updateNickName(memberId: Long, nickName: String) = db.run {
+    TmMember.filter(_.memberId === memberId).map(m => (m.nickName, m.status)).update(nickName, 99)
+  }
+
+  def updateMemberStatus(memberId: Long, status: Byte) = db.run {
+    TmMember.filter(_.memberId === memberId).map(m => (m.status)).update(status)
+  }
 }
 
 class MemberRepositoryImpl extends MemberRepository with MySQLDBImpl

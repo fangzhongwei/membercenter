@@ -23,6 +23,10 @@ import scala.concurrent.{Future, Promise}
   * Created by fangzhongwei on 2016/11/22.
   */
 trait MemberService {
+  def updateMemberStatus(traceId: String, memberId: Long, status: Int): BaseResponse
+
+  def updateNickName(traceId: String, memberId: Long, nickName: String = null): BaseResponse
+
   def register(traceId: String, mobileTicket: String): BaseResponse
 
   def getMemberById(traceId: String, memberId: Long): MemberResponse
@@ -82,4 +86,13 @@ class MemberServiceImpl @Inject()(rabbitmqProducerTemplate: RabbitmqProducerTemp
     }
   }
 
+  override def updateNickName(traceId: String, memberId: Long, nickName: String): BaseResponse = {
+    memberRepository.updateNickName(memberId, nickName)
+    new BaseResponse("0")
+  }
+
+  override def updateMemberStatus(traceId: String, memberId: Long, status: Int): BaseResponse = {
+    memberRepository.updateMemberStatus(memberId, status.toByte)
+    new BaseResponse("0")
+  }
 }
