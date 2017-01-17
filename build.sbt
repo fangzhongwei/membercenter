@@ -11,7 +11,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0-M2",
   "ch.qos.logback" % "logback-classic" % "1.1.7",
   "com.typesafe.slick" %% "slick" % "3.2.0-M2",
-  "net.codingwell" %% "scala-guice" % "4.0.1",
+  "net.codingwell" %% "scala-guice" % "4.1.0",
+  "com.lawsofnature.account" % "accountclient_2.11" % "1.0",
   "org.scalatest" %% "scalatest" % "2.2.5" % "test",
   "com.typesafe.slick" % "slick-codegen_2.11" % "3.2.0-M2" % "test"
 )

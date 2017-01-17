@@ -6,6 +6,7 @@ import javax.inject.Inject
 
 import RpcEd.DecryptResponse
 import RpcMember.{BaseResponse, MemberResponse}
+import com.lawsofnature.account.client.AccountClientService
 import com.lawsofnature.common.exception.{ErrorCode, ServiceException}
 import com.lawsofnature.common.helper.MaskHelper
 import com.lawsofnature.common.rabbitmq.RabbitmqProducerTemplate
@@ -34,7 +35,7 @@ trait MemberService {
   def getMemberByMobile(traceId: String, mobileTicket: String): MemberResponse
 }
 
-class MemberServiceImpl @Inject()(rabbitmqProducerTemplate: RabbitmqProducerTemplate, edClientService: EdClientService, memberRepository: MemberRepository) extends MemberService {
+class MemberServiceImpl @Inject()(rabbitmqProducerTemplate: RabbitmqProducerTemplate, edClientService: EdClientService, memberRepository: MemberRepository, accountClientService:AccountClientService) extends MemberService {
   private[this] val logger = LoggerFactory.getLogger(this.getClass)
   private[this] val passwordEncoder: StandardPasswordEncoder = new StandardPasswordEncoder(ConfigFactory.load().getString("password.salt"))
 
@@ -45,8 +46,8 @@ class MemberServiceImpl @Inject()(rabbitmqProducerTemplate: RabbitmqProducerTemp
       case "0" =>
         val mobile: String = MaskHelper.maskMobile(decryptResponse.raw)
         val timestamp: Timestamp = new Timestamp(System.currentTimeMillis())
+        accountClientService.createAccount(traceId, memberId)
         memberRepository.createMember(Member(memberId, mobile, mobileTicket, 0.toByte, "", "", timestamp, timestamp))
-        produceCreateAccountMessage(memberId)
         new BaseResponse("0")
       case _ => new BaseResponse(decryptResponse.code)
     }
@@ -54,20 +55,6 @@ class MemberServiceImpl @Inject()(rabbitmqProducerTemplate: RabbitmqProducerTemp
 
   def encodePassword(pwd: String): String = {
     passwordEncoder.encode(pwd)
-  }
-
-  def produceCreateAccountMessage(memberId: Long): Future[Unit] = {
-    val promise: Promise[Unit] = Promise[Unit]
-    Future {
-      val config: Config = ConfigFactory.load()
-      rabbitmqProducerTemplate.send(config.getString("account.mq.exchange"),
-        config.getString("account.mq.exchangeType"),
-        config.getString("account.mq.queue"),
-        config.getString("account.mq.routingKey"),
-        memberId.toString.getBytes(StandardCharsets.UTF_8))
-      promise.success()
-    }
-    promise.future
   }
 
   override def getMemberById(traceId: String, memberId: Long): MemberResponse = {

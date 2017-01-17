@@ -6,6 +6,7 @@ import Ice.ObjectImpl
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Guice}
 import com.lawsofnatrue.common.ice._
+import com.lawsofnature.account.client.{AccountClientService, AccountClientServiceImpl}
 import com.lawsofnature.common.rabbitmq.{RabbitmqProducerTemplate, RabbitmqProducerTemplateImpl}
 import com.lawsofnature.edcenter.client.{EdClientService, EdClientServiceImpl}
 import com.lawsofnature.repo._
@@ -26,6 +27,7 @@ object RpcService extends App {
       bind(classOf[IcePrxFactory]).to(classOf[IcePrxFactoryImpl]).asEagerSingleton()
       bind(classOf[EdClientService]).to(classOf[EdClientServiceImpl]).asEagerSingleton()
       bind(classOf[RabbitmqProducerTemplate]).to(classOf[RabbitmqProducerTemplateImpl]).asEagerSingleton()
+      bind(classOf[AccountClientService]).to(classOf[AccountClientServiceImpl]).asEagerSingleton()
     }
   })
 
