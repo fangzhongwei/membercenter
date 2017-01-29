@@ -6,7 +6,6 @@ scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
   "com.lawsofnature.member" % "memberclient_2.11" % "1.0",
-  "com.lawsofnature.common" % "common-ice_2.11" % "1.0",
   "mysql" % "mysql-connector-java" % "5.1.36",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0-M2",
   "ch.qos.logback" % "logback-classic" % "1.1.7",

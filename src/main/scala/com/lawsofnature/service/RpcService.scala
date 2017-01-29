@@ -2,7 +2,6 @@ package com.lawsofnature.service
 
 import java.util
 
-import Ice.ObjectImpl
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Guice}
 import com.jxjxgo.scrooge.thrift.template.{ScroogeThriftServerTemplate, ScroogeThriftServerTemplateImpl}
@@ -27,7 +26,6 @@ object RpcService extends App {
       bind(classOf[MemberService]).to(classOf[MemberServiceImpl]).asEagerSingleton()
       bind(classOf[MemberEndpoint[Future]]).to(classOf[MemberEndpointImpl]).asEagerSingleton()
       bind(classOf[ScroogeThriftServerTemplate]).to(classOf[ScroogeThriftServerTemplateImpl[MemberEndpoint[Future]]]).asEagerSingleton()
-      bind(classOf[IceServerTemplate]).to(classOf[IceServerTemplateImpl]).asEagerSingleton()
       bind(classOf[IcePrxFactory]).to(classOf[IcePrxFactoryImpl]).asEagerSingleton()
       bind(classOf[EdClientService]).to(classOf[EdClientServiceImpl]).asEagerSingleton()
       bind(classOf[RabbitmqProducerTemplate]).to(classOf[RabbitmqProducerTemplateImpl]).asEagerSingleton()
@@ -37,5 +35,5 @@ object RpcService extends App {
 
   injector.getInstance(classOf[RabbitmqProducerTemplate]).connect
   injector.getInstance(classOf[EdClientService]).initClient
-  injector.getInstance(classOf[IceServerTemplate]).startServer
+  injector.getInstance(classOf[ScroogeThriftServerTemplate]).init
 }
