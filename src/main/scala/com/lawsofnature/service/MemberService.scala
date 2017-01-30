@@ -3,18 +3,16 @@ package com.lawsofnature.service
 import java.sql.Timestamp
 import javax.inject.Inject
 
-import RpcEd.DecryptResponse
 import com.lawsofnature.account.client.AccountClientService
 import com.lawsofnature.common.exception.{ErrorCode, ServiceException}
 import com.lawsofnature.common.helper.MaskHelper
-import com.lawsofnature.common.rabbitmq.RabbitmqProducerTemplate
-import com.lawsofnature.edcenter.client.EdClientService
 import com.lawsofnature.membercenter.domain.Member
 import com.lawsofnature.repo.MemberRepository
+import com.twitter.util.{Await, Future}
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.password.StandardPasswordEncoder
-import thrift.{MemberBaseResponse, MemberResponse}
+import thrift.{DecryptResponse, EdServiceEndpoint, MemberBaseResponse, MemberResponse}
 
 /**
   * Created by fangzhongwei on 2016/11/22.
@@ -31,13 +29,13 @@ trait MemberService {
   def getMemberByMobile(traceId: String, mobileTicket: String): MemberResponse
 }
 
-class MemberServiceImpl @Inject()(rabbitmqProducerTemplate: RabbitmqProducerTemplate, edClientService: EdClientService, memberRepository: MemberRepository, accountClientService: AccountClientService) extends MemberService {
+class MemberServiceImpl @Inject()(edServiceEndpoint: EdServiceEndpoint[Future], memberRepository: MemberRepository, accountClientService: AccountClientService) extends MemberService {
   private[this] val logger = LoggerFactory.getLogger(this.getClass)
   private[this] val passwordEncoder: StandardPasswordEncoder = new StandardPasswordEncoder(ConfigFactory.load().getString("password.salt"))
 
   override def register(traceId: String, mobileTicket: String): MemberBaseResponse = {
     val memberId: Long = memberRepository.getNextMemberId()
-    val decryptResponse: DecryptResponse = edClientService.decrypt(traceId, mobileTicket)
+    val decryptResponse: DecryptResponse = Await.result(edServiceEndpoint.decrypt(traceId, mobileTicket))
     decryptResponse.code match {
       case "0" =>
         val mobile: String = MaskHelper.maskMobile(decryptResponse.raw)

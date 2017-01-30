@@ -7,13 +7,12 @@ import com.google.inject.{AbstractModule, Guice}
 import com.jxjxgo.scrooge.thrift.template.{ScroogeThriftServerTemplate, ScroogeThriftServerTemplateImpl}
 import com.lawsofnatrue.common.ice._
 import com.lawsofnature.account.client.{AccountClientService, AccountClientServiceImpl}
-import com.lawsofnature.common.rabbitmq.{RabbitmqProducerTemplate, RabbitmqProducerTemplateImpl}
-import com.lawsofnature.edcenter.client.{EdClientService, EdClientServiceImpl}
 import com.lawsofnature.repo._
 import com.lawsofnature.rpc.MemberEndpointImpl
+import com.twitter.finagle.Thrift
 import com.twitter.util.Future
 import org.slf4j.LoggerFactory
-import thrift.MemberEndpoint
+import thrift.{EdServiceEndpoint, MemberEndpoint}
 
 object RpcService extends App {
   private[this] var logger = LoggerFactory.getLogger(this.getClass)
@@ -27,13 +26,11 @@ object RpcService extends App {
       bind(classOf[MemberEndpoint[Future]]).to(classOf[MemberEndpointImpl]).asEagerSingleton()
       bind(classOf[ScroogeThriftServerTemplate]).to(classOf[ScroogeThriftServerTemplateImpl[MemberEndpoint[Future]]]).asEagerSingleton()
       bind(classOf[IcePrxFactory]).to(classOf[IcePrxFactoryImpl]).asEagerSingleton()
-      bind(classOf[EdClientService]).to(classOf[EdClientServiceImpl]).asEagerSingleton()
-      bind(classOf[RabbitmqProducerTemplate]).to(classOf[RabbitmqProducerTemplateImpl]).asEagerSingleton()
+      bind(classOf[EdServiceEndpoint[Future]]).toInstance(Thrift.client.newIface[EdServiceEndpoint[Future]]("127.0.0.1:8080"))
       bind(classOf[AccountClientService]).to(classOf[AccountClientServiceImpl]).asEagerSingleton()
     }
   })
 
-  injector.getInstance(classOf[RabbitmqProducerTemplate]).connect
-  injector.getInstance(classOf[EdClientService]).initClient
+  injector.getInstance(classOf[AccountClientService]).initClient
   injector.getInstance(classOf[ScroogeThriftServerTemplate]).init
 }
