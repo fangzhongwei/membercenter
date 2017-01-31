@@ -1,4 +1,4 @@
-package com.lawsofnature.membercenter.domain
+package com.jxjxgo.membercenter.domain
 
 import java.sql.Timestamp
 

@@ -1,4 +1,4 @@
-package com.lawsofnature.membercenter.generate
+package com.jxjxgo.member.test
 
 /**
   * Created by fangzhongwei on 2016/10/24.
