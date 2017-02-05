@@ -1,6 +1,7 @@
 package com.jxjxgo.repo
 
-import com.lawsofnature.connection.MySQLDBImpl
+import com.jxjxgo.mysql.connection.MySQLDBImpl
+
 
 /** Slick data model trait for extension, choice of backend or usage in the cake pattern. (Make sure to initialize this late.) */
 trait Tables extends MySQLDBImpl {

@@ -8,7 +8,7 @@ import com.jxjxgo.common.helper.MaskHelper
 import com.jxjxgo.edcenter.rpc.domain.{DecryptResponse, EdServiceEndpoint}
 import com.jxjxgo.membercenter.domain.Member
 import com.jxjxgo.repo.MemberRepository
-import com.lawsofnature.common.exception.{ErrorCode, ServiceException}
+import com.jxjxgo.common.exception.{ErrorCode, ServiceException}
 import com.twitter.util.{Await, Future}
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory

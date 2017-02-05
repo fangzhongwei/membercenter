@@ -2,8 +2,8 @@ package com.jxjxgo.rpc
 
 import javax.inject.Inject
 
+import com.jxjxgo.common.exception.{ErrorCode, ServiceException}
 import com.jxjxgo.service.MemberService
-import com.lawsofnature.common.exception.{ErrorCode, ServiceException}
 import com.twitter.util.Future
 import org.slf4j.LoggerFactory
 import com.jxjxgo.memberber.rpc.domain.{MemberBaseResponse, MemberEndpoint, MemberResponse}

@@ -1,7 +1,7 @@
 package com.jxjxgo.repo
 
 import com.jxjxgo.membercenter.domain.Member
-import com.lawsofnature.connection.{DBComponent, MySQLDBImpl}
+import com.jxjxgo.mysql.connection.{DBComponent, MySQLDBImpl}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}

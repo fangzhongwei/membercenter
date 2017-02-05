@@ -5,7 +5,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.8",
   libraryDependencies ++= Seq(
     "com.jxjxgo.common" % "common-finagle-thrift_2.11" % "1.0",
-    "com.lawsofnature.common" % "common-edecrypt_2.11" % "1.0"
+    "com.jxjxgo.common" % "common-edecrypt_2.11" % "1.0"
   )
 )
 
@@ -25,8 +25,8 @@ lazy val memberserver = (project in file("memberserver")).settings(commonSetting
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     "com.jxjxgo.account" % "accountcommonlib_2.11" % "1.0",
     "org.reactivestreams" % "reactive-streams" % "1.0.0",
-    "com.lawsofnature.common" % "common-error_2.11" % "1.0",
-    "com.lawsofnature.common" % "common-mysql_2.11" % "1.0",
+    "com.jxjxgo.common" % "common-error_2.11" % "1.0",
+    "com.jxjxgo.common" % "common-mysql_2.11" % "1.0",
     "com.jxjxgo.edcenter" % "edclient_2.11" % "1.0",
     "com.jxjxgo.common" % "common-utils_2.11" % "1.0",
     "org.springframework.security" % "spring-security-crypto" % "4.2.0.RELEASE",
