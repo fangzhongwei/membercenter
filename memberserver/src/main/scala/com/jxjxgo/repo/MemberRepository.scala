@@ -1,7 +1,7 @@
 package com.jxjxgo.repo
 
 import com.jxjxgo.membercenter.domain.Member
-import com.jxjxgo.mysql.connection.{DBComponent, MySQLDBImpl}
+import com.jxjxgo.mysql.connection.DBComponent
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -45,12 +45,8 @@ trait MemberRepository extends Tables {
     sql"""select password from tm_member where member_id = $memberId""".as[String].headOption
   }
 
-  var index = -1
-
   def getNextMemberId(): Long = {
-    index = index + 1
-    val sequenceName = "member_id_" + index % 3
-    Await.result(db.run(sql"""select nextval($sequenceName)""".as[(Long)]), Duration.Inf).head
+    Await.result(db.run(sql"""select nextval('seq_member_id')""".as[(Long)]), Duration.Inf).head
   }
 
   def updateNickName(memberId: Long, nickName: String) = db.run {
@@ -62,4 +58,4 @@ trait MemberRepository extends Tables {
   }
 }
 
-class MemberRepositoryImpl extends MemberRepository with MySQLDBImpl
+class MemberRepositoryImpl extends MemberRepository with DBComponent
