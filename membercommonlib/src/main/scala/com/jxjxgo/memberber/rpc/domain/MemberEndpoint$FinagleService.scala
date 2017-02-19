@@ -143,7 +143,7 @@ class MemberEndpoint$FinagleService(
       val args = Register.Args.decode(iprot)
       iprot.readMessageEnd()
       (try {
-        iface.register(args.traceId, args.mobileTicket)
+        iface.register(args.traceId, args.mobileTicket, args.deviceType)
       } catch {
         case e: Exception => Future.exception(e)
       }).flatMap { value: com.jxjxgo.memberber.rpc.domain.MemberBaseResponse =>

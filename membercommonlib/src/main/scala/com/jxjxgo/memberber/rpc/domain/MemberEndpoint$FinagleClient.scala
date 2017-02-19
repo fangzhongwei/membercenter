@@ -105,9 +105,9 @@ class MemberEndpoint$FinagleClient(
     val FailuresScope = scopedStats.scope("register").scope("failures")
   }
   
-  def register(traceId: String, mobileTicket: String): Future[com.jxjxgo.memberber.rpc.domain.MemberBaseResponse] = {
+  def register(traceId: String, mobileTicket: String, deviceType: Int): Future[com.jxjxgo.memberber.rpc.domain.MemberBaseResponse] = {
     __stats_register.RequestsCounter.incr()
-    val inputArgs = Register.Args(traceId, mobileTicket)
+    val inputArgs = Register.Args(traceId, mobileTicket, deviceType)
     val replyDeserializer: Array[Byte] => _root_.com.twitter.util.Try[com.jxjxgo.memberber.rpc.domain.MemberBaseResponse] =
       response => {
         val result = decodeResponse(response, Register.Result)

@@ -14,9 +14,9 @@ import com.jxjxgo.memberber.rpc.domain.{MemberBaseResponse, MemberEndpoint, Memb
 class MemberEndpointImpl @Inject()(memberService: MemberService) extends MemberEndpoint[Future] {
   private[this] val logger = LoggerFactory.getLogger(this.getClass)
 
-  override def register(traceId: String, mobileTicket: String): Future[MemberBaseResponse] = {
+  override def register(traceId: String, mobileTicket: String, deviceType:Int): Future[MemberBaseResponse] = {
     try {
-      Future.value(memberService.register(traceId, mobileTicket))
+      Future.value(memberService.register(traceId, mobileTicket, deviceType))
     } catch {
       case ex: ServiceException =>
         logger.error(traceId, ex)

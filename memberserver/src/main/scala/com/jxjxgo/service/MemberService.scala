@@ -23,7 +23,7 @@ trait MemberService {
 
   def updateNickName(traceId: String, memberId: Long, nickName: String = null): MemberBaseResponse
 
-  def register(traceId: String, mobileTicket: String): MemberBaseResponse
+  def register(traceId: String, mobileTicket: String, deviceType: Int ): MemberBaseResponse
 
   def getMemberById(traceId: String, memberId: Long): MemberResponse
 
@@ -34,14 +34,14 @@ class MemberServiceImpl @Inject()(edServiceEndpoint: EdServiceEndpoint[Future], 
   private[this] val logger = LoggerFactory.getLogger(this.getClass)
   private[this] val passwordEncoder: StandardPasswordEncoder = new StandardPasswordEncoder(ConfigFactory.load().getString("password.salt"))
 
-  override def register(traceId: String, mobileTicket: String): MemberBaseResponse = {
+  override def register(traceId: String, mobileTicket: String, deviceType: Int): MemberBaseResponse = {
     val memberId: Long = memberRepository.getNextMemberId()
     val decryptResponse: DecryptResponse = Await.result(edServiceEndpoint.decrypt(traceId, mobileTicket))
     decryptResponse.code match {
       case "0" =>
         val mobile: String = MaskHelper.maskMobile(decryptResponse.raw)
         val timestamp: Timestamp = new Timestamp(System.currentTimeMillis())
-        val accountBaseResponse: AccountBaseResponse = Await.result(accountEndpoint.createAccount(traceId, memberId))
+        val accountBaseResponse: AccountBaseResponse = Await.result(accountEndpoint.createAccount(traceId, memberId, deviceType))
         accountBaseResponse.code match {
           case "0" =>
             memberRepository.createMember(Member(memberId, mobile, mobileTicket, 0.toByte, "", "", timestamp, timestamp))
