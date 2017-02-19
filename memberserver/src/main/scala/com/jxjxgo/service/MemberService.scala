@@ -21,7 +21,7 @@ import com.jxjxgo.memberber.rpc.domain.{MemberBaseResponse, MemberResponse}
 trait MemberService {
   def updateMemberStatus(traceId: String, memberId: Long, status: Int): MemberBaseResponse
 
-  def updateNickName(traceId: String, memberId: Long, nickName: String = null): MemberBaseResponse
+  def updateNickName(traceId: String, memberId: Long, nickName: String): MemberBaseResponse
 
   def register(traceId: String, mobileTicket: String, deviceType: Int ): MemberBaseResponse
 

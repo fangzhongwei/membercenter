@@ -57,9 +57,9 @@ class MemberEndpointImpl @Inject()(memberService: MemberService) extends MemberE
     }
   }
 
-  override def updateNickName(traceId: String, memberId: Long, s1: String): Future[MemberBaseResponse] = {
+  override def updateNickName(traceId: String, memberId: Long, nickName: String): Future[MemberBaseResponse] = {
     try {
-      Future.value(memberService.updateNickName(traceId, memberId))
+      Future.value(memberService.updateNickName(traceId, memberId, nickName))
     } catch {
       case ex: ServiceException =>
         logger.error(traceId, ex)
