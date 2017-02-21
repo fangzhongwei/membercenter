@@ -17,6 +17,7 @@ lazy val membercommonlib = (project in file("membercommonlib")).settings(commonS
 
 lazy val memberserver = (project in file("memberserver")).settings(commonSettings: _*).settings(
   name := """memberserver""",
+  mainClass in (Compile, run) := Some("com.jxjxgo.service.RpcService"),
   libraryDependencies ++= Seq(
     "com.jxjxgo.member" % "membercommonlib_2.11" % "1.0",
     "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0-M2",
